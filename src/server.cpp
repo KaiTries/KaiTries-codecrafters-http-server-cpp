@@ -54,11 +54,17 @@ int main(int argc, char **argv)
 
   std::cout << "Waiting for a client to connect...\n";
 
+  // accept a new connection, return socket file descriptor of client
   int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
   std::cout << "Client connected\n";
 
   // response string to the client
   std::string response = "HTTP/1.1 200 OK\r\n\r\n";
+
+  // read the request from the client
+  char buffer[1024] = {0};
+  read(client_fd, buffer, 1024);
+  std::cout << "Request: " << buffer << std::endl;
 
   // send the response to the client
   send(client_fd, response.c_str(), response.size(), 0);
