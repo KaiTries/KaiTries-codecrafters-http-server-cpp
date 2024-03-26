@@ -69,19 +69,23 @@ int main(int argc, char **argv)
   std::string request(buffer);
   std::string first_line = request.substr(0, request.find("\r\n"));
   std::string path = first_line.substr(first_line.find(" ") + 1, first_line.rfind(" ") - first_line.find(" ") - 1);
-  std::cout << "Path: " << path << std::endl;
 
 
   std::string response;
   if (path == "/")
   {
-  // response string to the client
-  response = "HTTP/1.1 200 OK\r\n\r\n";
-  // send the response to the client
-  } else {
     // response string to the client
-  response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    response = "HTTP/1.1 200 OK\r\n\r\n";
+  } else if (/*path starts with /echo/*/ path.find("/echo") == 0){
+    // response string to the client
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n";}
+  
+  else {
+    // response string to the client
+    response = "HTTP/1.1 404 Not Found\r\n\r\n";
   }
+
+
   // send the response to the client
   send(client_fd, response.c_str(), response.size(), 0);
 
