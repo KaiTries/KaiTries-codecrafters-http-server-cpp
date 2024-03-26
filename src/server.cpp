@@ -58,16 +58,34 @@ int main(int argc, char **argv)
   int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
   std::cout << "Client connected\n";
 
-  // response string to the client
-  std::string response = "HTTP/1.1 200 OK\r\n\r\n";
+
 
   // read the request from the client
   char buffer[1024] = {0};
   read(client_fd, buffer, 1024);
   std::cout << "Request: " << buffer << std::endl;
 
+  // only get the first line of the request
+  std::string request(buffer);
+  std::string first_line = request.substr(0, request.find("\r\n"));
+  std::cout << "First line: " << first_line << std::endl;
+
+  // get the path from the first line
+  std::string path = first_line.substr(first_line.find(" ") + 1, first_line.rfind(" ") - first_line.find(" ") - 1);
+  std::cout << "Path: " << path << std::endl;
+  
+
+
+  // response string to the client
+  std::string response = "HTTP/1.1 200 OK\r\n\r\n";
   // send the response to the client
   send(client_fd, response.c_str(), response.size(), 0);
+
+    // response string to the client
+  std::string response = "HTTP/1.1 404 Not Found\r\n\r\n";
+  // send the response to the client
+  send(client_fd, response.c_str(), response.size(), 0);
+
 
   close(server_fd);
 
