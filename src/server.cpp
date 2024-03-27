@@ -104,6 +104,21 @@ void handle_client(int client_id, const std::string &directory)
     }
     else if (request.method == "POST")
     {
+      // write contents of body to file specified
+      std::string file_path = directory + path.substr(7);
+      FILE *file = fopen(file_path.c_str(), "w");
+
+      if (file == NULL)
+      {
+        response = "HTTP/1.1 404 Not Found\r\n\r\n";
+      }
+      else
+      {
+        fwrite(request.body.c_str(), 1, request.body.size(), file);
+        fclose(file);
+        response = "HTTP/1.1 201 CREATED\r\n\r\n";
+      }
+
     }
   }
   else
