@@ -40,10 +40,7 @@ HttpRequest parse_request(const std::string &request)
     std::getline(header_line_stream, header_value);
     req.headers[header_name] = header_value.substr(1); // Skip the leading space
   }
-
-
   std::getline(request_stream, req.body, '\0');
-
   return req;
 }
 
