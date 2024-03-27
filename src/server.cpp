@@ -78,14 +78,22 @@ int main(int argc, char **argv)
     response = "HTTP/1.1 200 OK\r\n\r\n";
   } else if (/*path starts with /echo/*/ path.find("/echo") == 0){
     // response string to the client
-    std::string echo = path.substr(path.find(" ") + 1, path.rfind(" ") - path.find(" ") - 1);
-    std::string after_echo = echo.substr(echo.find("/",1) + 1);
-    std::cout << "Echo: " << after_echo << std::endl;
-    int len = after_echo.length();
-    std::string len_str = std::to_string(len); // Convert len to string
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + after_echo + "\r\n\r\n";
+    std::string echo = path.substr(path.find(" ") + 6, path.rfind(" ") - path.find(" ") - 1);
+    std::string len_str = std::to_string(echo.length()); // Convert len to string
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
   
+  } else if (path.find("/user-agent") == 0) {
+    // find the line that starts with User-Agent:
+    std::string user_agent = "";
+    size_t pos = request.find("User-Agent: ");
+    if (pos != std::string::npos) {
+      size_t end = request.find("\r\n", pos);
+      user_agent = request.substr(pos + 12, end - pos - 12);
     }
+    std::string len_str = std::to_string(user_agent.length()); // Convert len to string
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n\r\n";
+
+  }
   else {
     // response string to the client
     response = "HTTP/1.1 404 Not Found\r\n\r\n";
