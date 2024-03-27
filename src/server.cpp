@@ -31,7 +31,7 @@ HttpRequest parse_request(const std::string &request)
   std::istringstream request_line_stream(line);
   request_line_stream >> req.method >> req.path >> req.version;
 
-  while (std::getline(request_stream, line) && line != "\r")
+  while (std::getline(request_stream, line) && line != "\r\n")
   {
     std::istringstream header_line_stream(line);
     std::string header_name;
