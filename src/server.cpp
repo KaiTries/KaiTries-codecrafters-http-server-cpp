@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <map>     // Add this line
 #include <sstream> // Add this line
+#include <thread>
 
 struct HttpRequest
 {
@@ -39,6 +40,44 @@ HttpRequest parse_request(const std::string &request)
     req.headers[header_name] = header_value.substr(1); // Skip the leading space
   }
   return req;
+}
+
+void handle_client(int client_id)
+{
+  char buffer[1024] = {0};
+  read(client_id, buffer, 1024);
+  HttpRequest request = parse_request(buffer);
+
+  std::string path = request.path;
+
+  std::string response;
+  if (path == "/")
+  {
+    // response string to the client
+    response = "HTTP/1.1 200 OK\r\n\r\n";
+  }
+  else if (/*path starts with /echo/*/ path.find("/echo") == 0)
+  {
+    // response string to the client
+    std::string echo = path.substr(path.find(" ") + 7, path.rfind(" ") - path.find(" ") - 1);
+    std::string len_str = std::to_string(echo.length()); // Convert len to string
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
+  }
+  else if (path.find("/user-agent") == 0)
+  {
+    std::string user_agent = request.headers["User-Agent"];
+    std::string len_str = std::to_string(user_agent.length() - 1); // Convert len to string
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n\r\n";
+  }
+  else
+  {
+    // response string to the client
+    response = "HTTP/1.1 404 Not Found\r\n\r\n";
+  }
+
+  // send the response to the client
+  send(client_id, response.c_str(), response.size(), 0);
+  close(client_id);
 }
 
 int main(int argc, char **argv)
@@ -89,47 +128,17 @@ int main(int argc, char **argv)
 
   while (true)
   {
-    // new request
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
-    std::cout << "Client connected\n";
-
-    // read the request from the client
-    char buffer[1024] = {0};
-    read(client_fd, buffer, 1024);
-    HttpRequest request = parse_request(buffer);
-
-    std::string path = request.path;
-
-    std::string response;
-    if (path == "/")
+    if (client_fd < 0)
     {
-      // response string to the client
-      response = "HTTP/1.1 200 OK\r\n\r\n";
-    }
-    else if (/*path starts with /echo/*/ path.find("/echo") == 0)
-    {
-      // response string to the client
-      std::string echo = path.substr(path.find(" ") + 7, path.rfind(" ") - path.find(" ") - 1);
-      std::string len_str = std::to_string(echo.length()); // Convert len to string
-      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
-    }
-    else if (path.find("/user-agent") == 0)
-    {
-      std::string user_agent = request.headers["User-Agent"];
-      std::string len_str = std::to_string(user_agent.length() - 1); // Convert len to string
-      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n\r\n";
-    }
-    else
-    {
-      // response string to the client
-      response = "HTTP/1.1 404 Not Found\r\n\r\n";
+      std::cerr << "accept failed\n";
+      return 1;
     }
 
-    // send the response to the client
-    send(client_fd, response.c_str(), response.size(), 0);
+    std::thread client_thread(handle_client, client_fd);
+    client_thread.detach();
+
   }
-
-  close(server_fd);
 
   return 0;
 }
