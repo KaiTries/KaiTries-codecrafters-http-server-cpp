@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     std::cout << "Echo: " << after_echo << std::endl;
     int len = after_echo.length();
     std::string len_str = std::to_string(len); // Convert len to string
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:" + len_str + "\r\n" + after_echo + "\r\n\r\n";
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + after_echo + "\r\n\r\n";
   
     }
   else {
