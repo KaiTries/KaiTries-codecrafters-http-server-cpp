@@ -17,6 +17,7 @@ struct HttpRequest
   std::string path;
   std::string version;
   std::map<std::string, std::string> headers;
+  std::string body;
 };
 
 HttpRequest parse_request(const std::string &request)
@@ -39,21 +40,14 @@ HttpRequest parse_request(const std::string &request)
     std::getline(header_line_stream, header_value);
     req.headers[header_name] = header_value.substr(1); // Skip the leading space
   }
+
+  std::getline(request_stream, line);
+  std::getline(request_stream, req.body, '\0');
+
   return req;
 }
 
-std::string build_response(int status_code, const std::string &status_message, const std::string &body)
-{
-
-  std::ostringstream response_stream;
-  response_stream << "HTTP/1.1 " << status_code << " " << status_message << "\r\n";
-  response_stream << "Content-Length: " << body.size() << "\r\n";
-  response_stream << "\r\n";
-  response_stream << body;
-  return response_stream.str();
-}
-
-void handle_client(int client_id,const std::string &directory)
+void handle_client(int client_id, const std::string &directory)
 {
   char buffer[1024] = {0};
   read(client_id, buffer, 1024);
@@ -81,33 +75,36 @@ void handle_client(int client_id,const std::string &directory)
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n\r\n";
   }
   else if (path.find("/files") == 0)
-  if (request.method == "GET") 
   {
-    // get file from file path
-    std::string file_path = directory + path.substr(7);
-    FILE *file = fopen(file_path.c_str(), "r");
-    if (file == NULL)
+    if (request.method == "GET")
     {
-      response = "HTTP/1.1 404 Not Found\r\n\r\n";
-    }
-    else
-    {
-      std::string content_type = "Content-Type: application/octet-stream\r\n";
-
-      // read out file into body
-      std::string body;
-      char c;
-      while ((c = fgetc(file)) != EOF)
+      // get file from file path
+      std::string file_path = directory + path.substr(7);
+      FILE *file = fopen(file_path.c_str(), "r");
+      if (file == NULL)
       {
-        body += c;
+        response = "HTTP/1.1 404 Not Found\r\n\r\n";
       }
-      fclose(file);
+      else
+      {
+        std::string content_type = "Content-Type: application/octet-stream\r\n";
 
-      // build response
-      response = "HTTP/1.1 200 OK\r\n" + content_type + "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+        // read out file into body
+        std::string body;
+        char c;
+        while ((c = fgetc(file)) != EOF)
+        {
+          body += c;
+        }
+        fclose(file);
+
+        // build response
+        response = "HTTP/1.1 200 OK\r\n" + content_type + "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+      }
     }
-  } else if (request.method == "POST") {
-
+    else if (request.method == "POST")
+    {
+    }
   }
   else
   {
