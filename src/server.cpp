@@ -114,6 +114,7 @@ void handle_client(int client_id, const std::string &directory)
       }
       else
       {
+        std::cout << request.body << std::endl;
         fwrite(request.body.c_str(), 1, request.body.size(), file);
         fclose(file);
         response = "HTTP/1.1 201 CREATED\r\n\r\n";
