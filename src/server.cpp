@@ -78,7 +78,7 @@ int main(int argc, char **argv)
     response = "HTTP/1.1 200 OK\r\n\r\n";
   } else if (/*path starts with /echo/*/ path.find("/echo") == 0){
     // response string to the client
-    std::string echo = path.substr(path.find(" ") + 6, path.rfind(" ") - path.find(" ") - 1);
+    std::string echo = path.substr(path.find(" ") + 7, path.rfind(" ") - path.find(" ") - 1);
     std::string len_str = std::to_string(echo.length()); // Convert len to string
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
   
