@@ -85,7 +85,8 @@ void handle_client(int client_id)
   }
   else if(path.find("/files") == 0) {
     // get file from file path
-    std::string file_path = path.substr(6);
+    std::string file_path = path.substr(7);
+    std::cout << file_path << std::endl;
     FILE *file = fopen(file_path.c_str(), "r");
     if (file == NULL) {
       response = "HTTP/1.1 404 Not Found\r\n\r\n";
