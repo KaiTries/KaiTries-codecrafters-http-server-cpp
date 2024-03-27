@@ -19,6 +19,7 @@ struct HttpRequest
   std::map<std::string, std::string> headers;
 };
 
+
 HttpRequest parse_request(const std::string &request)
 {
   HttpRequest req;
@@ -40,6 +41,19 @@ HttpRequest parse_request(const std::string &request)
     req.headers[header_name] = header_value.substr(1); // Skip the leading space
   }
   return req;
+}
+
+std::string build_response(int status_code, const std::string &status_message, const std::string &body)
+{
+
+
+  std::ostringstream response_stream;
+  response_stream << "HTTP/1.1 " << status_code << " " << status_message << "\r\n";
+  response_stream << "Content-Length: " << body.size() << "\r\n";
+  response_stream << "\r\n";
+  response_stream << body;
+  return response_stream.str();
+
 }
 
 void handle_client(int client_id)
@@ -68,6 +82,27 @@ void handle_client(int client_id)
     std::string user_agent = request.headers["User-Agent"];
     std::string len_str = std::to_string(user_agent.length() - 1); // Convert len to string
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n\r\n";
+  }
+  else if(path.find("/files") == 0) {
+    // get file from file path
+    std::string file_path = path.substr(7);
+    FILE *file = fopen(file_path.c_str(), "r");
+    if (file == NULL) {
+      response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    } else {
+      std::string content_type = "Content-Type: application/octet-stream\r\n";
+
+      // read out file into body
+      std::string body;
+      char c;
+      while ((c = fgetc(file)) != EOF) {
+        body += c;
+      }
+      fclose(file);
+
+      // build response
+      response = "HTTP/1.1 200 OK\r\n" + content_type + "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+    }
   }
   else
   {
@@ -125,7 +160,6 @@ int main(int argc, char **argv)
   int client_addr_len = sizeof(client_addr);
 
   std::cout << "Waiting for a client to connect...\n";
-
   while (true)
   {
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
@@ -134,7 +168,6 @@ int main(int argc, char **argv)
       std::cerr << "accept failed\n";
       return 1;
     }
-
     std::thread client_thread(handle_client, client_fd);
     client_thread.detach();
 
