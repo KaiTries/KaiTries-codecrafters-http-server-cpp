@@ -19,7 +19,6 @@ struct HttpRequest
   std::map<std::string, std::string> headers;
 };
 
-
 HttpRequest parse_request(const std::string &request)
 {
   HttpRequest req;
@@ -46,17 +45,15 @@ HttpRequest parse_request(const std::string &request)
 std::string build_response(int status_code, const std::string &status_message, const std::string &body)
 {
 
-
   std::ostringstream response_stream;
   response_stream << "HTTP/1.1 " << status_code << " " << status_message << "\r\n";
   response_stream << "Content-Length: " << body.size() << "\r\n";
   response_stream << "\r\n";
   response_stream << body;
   return response_stream.str();
-
 }
 
-void handle_client(int client_id)
+void handle_client(int client_id,const std::string &directory)
 {
   char buffer[1024] = {0};
   read(client_id, buffer, 1024);
@@ -83,20 +80,25 @@ void handle_client(int client_id)
     std::string len_str = std::to_string(user_agent.length() - 1); // Convert len to string
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n\r\n";
   }
-  else if(path.find("/files") == 0) {
+  else if (path.find("/files") == 0)
+  {
     // get file from file path
     std::string file_path = path.substr(7);
-    std::cout << file_path << std::endl;
+    std::cout << directory + file_path << std::endl;
     FILE *file = fopen(file_path.c_str(), "r");
-    if (file == NULL) {
+    if (file == NULL)
+    {
       response = "HTTP/1.1 404 Not Found\r\n\r\n";
-    } else {
+    }
+    else
+    {
       std::string content_type = "Content-Type: application/octet-stream\r\n";
 
       // read out file into body
       std::string body;
       char c;
-      while ((c = fgetc(file)) != EOF) {
+      while ((c = fgetc(file)) != EOF)
+      {
         body += c;
       }
       fclose(file);
@@ -120,6 +122,29 @@ int main(int argc, char **argv)
 {
   // You can use print statements as follows for debugging, they'll be visible when running tests.
   std::cout << "Logs from your program will appear here!\n";
+  std::string directory;
+
+  // Loop over the arguments
+  for (int i = 1; i < argc; ++i)
+  {
+    std::string arg = argv[i];
+
+    // Check if the argument is the --directory flag
+    if (arg == "--directory")
+    {
+      // Make sure we won't go out of bounds
+      if (i + 1 < argc)
+      {
+        // The next argument is the directory
+        directory = argv[++i];
+      }
+      else
+      {
+        std::cerr << "--directory requires one argument.\n";
+        return 1;
+      }
+    }
+  }
 
   // Uncomment this block to pass the first stage
 
@@ -169,9 +194,8 @@ int main(int argc, char **argv)
       std::cerr << "accept failed\n";
       return 1;
     }
-    std::thread client_thread(handle_client, client_fd);
+    std::thread client_thread(handle_client, client_fd, directory);
     client_thread.detach();
-
   }
 
   return 0;
