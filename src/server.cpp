@@ -81,6 +81,7 @@ void handle_client(int client_id,const std::string &directory)
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n\r\n";
   }
   else if (path.find("/files") == 0)
+  if (request.method == "GET") 
   {
     // get file from file path
     std::string file_path = directory + path.substr(7);
@@ -105,6 +106,8 @@ void handle_client(int client_id,const std::string &directory)
       // build response
       response = "HTTP/1.1 200 OK\r\n" + content_type + "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
     }
+  } else if (request.method == "POST") {
+
   }
   else
   {
