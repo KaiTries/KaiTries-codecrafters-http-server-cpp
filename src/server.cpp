@@ -7,6 +7,41 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <map> // Add this line
+#include <sstream> // Add this line
+
+struct HttpRequest {
+  std::string method;
+  std::string path;
+  std::string version;
+  std::map<std::string, std::string> headers;
+};
+
+
+
+HttpRequest parse_request(const std::string &request) {
+  HttpRequest req;
+
+  std::istringstream request_stream(request);
+  std::string line;
+
+  std::getline(request_stream, line);
+  std::istringstream request_line_stream(line);
+  request_line_stream >> req.method >> req.path >> req.version;
+
+  while (std::getline(request_stream, line) && line != "\r") {
+    std::istringstream header_line_stream(line);
+    std::string header_name;
+    std::getline(header_line_stream, header_name, ':');
+    std::string header_value;
+    std::getline(header_line_stream, header_value);
+    req.headers[header_name] = header_value.substr(1); // Skip the leading space
+  }
+  return req;
+}
+
+
+
 
 int main(int argc, char **argv)
 {
@@ -64,11 +99,10 @@ int main(int argc, char **argv)
   char buffer[1024] = {0};
   read(client_fd, buffer, 1024);
   std::cout << "Request: " << buffer << std::endl;
+  HttpRequest request = parse_request(buffer);
 
-  // only get the first line of the request
-  std::string request(buffer);
-  std::string first_line = request.substr(0, request.find("\r\n"));
-  std::string path = first_line.substr(first_line.find(" ") + 1, first_line.rfind(" ") - first_line.find(" ") - 1);
+  std::string path = request.path;
+
 
 
   std::string response;
@@ -83,13 +117,7 @@ int main(int argc, char **argv)
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
   
   } else if (path.find("/user-agent") == 0) {
-    // find the line that starts with User-Agent:
-    std::string user_agent = "";
-    size_t pos = request.find("User-Agent: ");
-    if (pos != std::string::npos) {
-      size_t end = request.find("\r\n", pos);
-      user_agent = request.substr(pos + 12, end - pos - 12);
-    }
+    std::string user_agent = request.headers["User-Agent"];
     std::string len_str = std::to_string(user_agent.length()); // Convert len to string
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n\r\n";
 
