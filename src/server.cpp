@@ -81,8 +81,11 @@ int main(int argc, char **argv)
     std::string echo = path.substr(path.find(" ") + 1, path.rfind(" ") - path.find(" ") - 1);
     std::string after_echo = echo.substr(echo.find("/",1) + 1);
     std::cout << "Echo: " << after_echo << std::endl;
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: \r\n" + after_echo + "\r\n\r\n";}
+    int len = after_echo.length();
+    std::string len_str = std::to_string(len); // Convert len to string
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:" + len_str + "\r\n" + after_echo + "\r\n\r\n";
   
+    }
   else {
     // response string to the client
     response = "HTTP/1.1 404 Not Found\r\n\r\n";
