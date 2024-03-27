@@ -78,7 +78,7 @@ int main(int argc, char **argv)
     response = "HTTP/1.1 200 OK\r\n\r\n";
   } else if (/*path starts with /echo/*/ path.find("/echo") == 0){
     // response string to the client
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n";}
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";}
   
   else {
     // response string to the client
