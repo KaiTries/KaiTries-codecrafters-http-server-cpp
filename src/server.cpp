@@ -83,8 +83,7 @@ void handle_client(int client_id,const std::string &directory)
   else if (path.find("/files") == 0)
   {
     // get file from file path
-    std::string file_path = path.substr(7);
-    std::cout << directory + file_path << std::endl;
+    std::string file_path = directory + path.substr(7);
     FILE *file = fopen(file_path.c_str(), "r");
     if (file == NULL)
     {
