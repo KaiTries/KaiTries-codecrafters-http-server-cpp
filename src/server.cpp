@@ -11,6 +11,9 @@
 #include <sstream> // Add this line
 #include <thread>
 
+std::string directory;
+
+
 struct HttpRequest
 {
   std::string method;
@@ -44,7 +47,7 @@ HttpRequest parse_request(const std::string &request)
   return req;
 }
 
-void handle_client(int client_id, const std::string &directory)
+void handle_client(int client_id)
 {
   char buffer[1024] = {0};
   read(client_id, buffer, 1024);
@@ -134,7 +137,6 @@ int main(int argc, char **argv)
 {
   // You can use print statements as follows for debugging, they'll be visible when running tests.
   std::cout << "Logs from your program will appear here!\n";
-  std::string directory;
 
   // Loop over the arguments
   for (int i = 1; i < argc; ++i)
@@ -206,7 +208,7 @@ int main(int argc, char **argv)
       std::cerr << "accept failed\n";
       return 1;
     }
-    std::thread client_thread(handle_client, client_fd, directory);
+    std::thread client_thread(handle_client, client_fd);
     client_thread.detach();
   }
 
