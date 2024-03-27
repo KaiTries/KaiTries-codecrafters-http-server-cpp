@@ -50,7 +50,7 @@ HttpRequest parse_request(const std::string &request)
 void handle_client(int client_id, const std::string &directory)
 {
   char buffer[2048] = {0};
-  read(client_id, buffer, 1024);
+  read(client_id, buffer, 2048);
   HttpRequest request = parse_request(buffer);
 
   std::string path = request.path;
