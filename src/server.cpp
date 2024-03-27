@@ -7,19 +7,19 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <map> // Add this line
+#include <map>     // Add this line
 #include <sstream> // Add this line
 
-struct HttpRequest {
+struct HttpRequest
+{
   std::string method;
   std::string path;
   std::string version;
   std::map<std::string, std::string> headers;
 };
 
-
-
-HttpRequest parse_request(const std::string &request) {
+HttpRequest parse_request(const std::string &request)
+{
   HttpRequest req;
 
   std::istringstream request_stream(request);
@@ -29,7 +29,8 @@ HttpRequest parse_request(const std::string &request) {
   std::istringstream request_line_stream(line);
   request_line_stream >> req.method >> req.path >> req.version;
 
-  while (std::getline(request_stream, line) && line != "\r") {
+  while (std::getline(request_stream, line) && line != "\r")
+  {
     std::istringstream header_line_stream(line);
     std::string header_name;
     std::getline(header_line_stream, header_name, ':');
@@ -39,9 +40,6 @@ HttpRequest parse_request(const std::string &request) {
   }
   return req;
 }
-
-
-
 
 int main(int argc, char **argv)
 {
@@ -89,48 +87,47 @@ int main(int argc, char **argv)
 
   std::cout << "Waiting for a client to connect...\n";
 
-  // accept a new connection, return socket file descriptor of client
-  int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
-  std::cout << "Client connected\n";
-
-
-
-  // read the request from the client
-  char buffer[1024] = {0};
-  read(client_fd, buffer, 1024);
-  std::cout << "Request: " << buffer << std::endl;
-  HttpRequest request = parse_request(buffer);
-
-  std::string path = request.path;
-
-
-
-  std::string response;
-  if (path == "/")
+  while (true)
   {
-    // response string to the client
-    response = "HTTP/1.1 200 OK\r\n\r\n";
-  } else if (/*path starts with /echo/*/ path.find("/echo") == 0){
-    // response string to the client
-    std::string echo = path.substr(path.find(" ") + 7, path.rfind(" ") - path.find(" ") - 1);
-    std::string len_str = std::to_string(echo.length()); // Convert len to string
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
-  
-  } else if (path.find("/user-agent") == 0) {
-    std::string user_agent = request.headers["User-Agent"];
-    std::string len_str = std::to_string(user_agent.length() - 1); // Convert len to string
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n";
+    // new request
+    int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
+    std::cout << "Client connected\n";
 
+    // read the request from the client
+    char buffer[1024] = {0};
+    read(client_fd, buffer, 1024);
+    HttpRequest request = parse_request(buffer);
+
+    std::string path = request.path;
+
+    std::string response;
+    if (path == "/")
+    {
+      // response string to the client
+      response = "HTTP/1.1 200 OK\r\n\r\n";
+    }
+    else if (/*path starts with /echo/*/ path.find("/echo") == 0)
+    {
+      // response string to the client
+      std::string echo = path.substr(path.find(" ") + 7, path.rfind(" ") - path.find(" ") - 1);
+      std::string len_str = std::to_string(echo.length()); // Convert len to string
+      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
+    }
+    else if (path.find("/user-agent") == 0)
+    {
+      std::string user_agent = request.headers["User-Agent"];
+      std::string len_str = std::to_string(user_agent.length() - 1); // Convert len to string
+      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n\r\n";
+    }
+    else
+    {
+      // response string to the client
+      response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    }
+
+    // send the response to the client
+    send(client_fd, response.c_str(), response.size(), 0);
   }
-  else {
-    // response string to the client
-    response = "HTTP/1.1 404 Not Found\r\n\r\n";
-  }
-
-
-  // send the response to the client
-  send(client_fd, response.c_str(), response.size(), 0);
-
 
   close(server_fd);
 
