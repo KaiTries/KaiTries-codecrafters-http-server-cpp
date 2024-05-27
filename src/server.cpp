@@ -74,7 +74,14 @@ void handle_client(int client_id)
     std::string encodingHeader = request.headers["accept-encoding"];
     std::cout << "encoding header: " << encodingHeader << std::endl;
     std::string len_str = std::to_string(echo.length()); // Convert len to string
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
+
+    if (encodingHeader == "gzip") {
+      response = "HTTP/1.1 200 OK\r\nContent-Encoding: "+ encodingHeader + "\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
+
+    } else {
+      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
+    }
+
   }
   else if (path.find("/user-agent") == 0)
   {
