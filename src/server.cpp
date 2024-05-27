@@ -85,7 +85,7 @@ void handle_client(int client_id)
   }
   else if (path.find("/user-agent") == 0)
   {
-    std::string user_agent = request.headers["User-Agent"];
+    std::string user_agent = request.headers["user-agent"];
     std::string len_str = std::to_string(user_agent.length() - 1); // Convert len to string
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + user_agent + "\r\n\r\n";
   }
