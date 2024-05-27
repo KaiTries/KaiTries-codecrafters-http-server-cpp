@@ -12,6 +12,7 @@
 #include <thread>
 #include <algorithm>
 #include <cctype>
+#include <zlib.h>
 
 std::string directory;
 
@@ -24,6 +25,44 @@ struct HttpRequest
   std::map<std::string, std::string> headers;
   std::string body;
 };
+
+#include <zlib.h>
+#include <string>
+#include <stdexcept>
+
+std::string compress_string(const std::string& str, int compressionlevel = Z_BEST_COMPRESSION) {
+    z_stream zs;
+    memset(&zs, 0, sizeof(zs));
+
+    if (deflateInit2(&zs, compressionlevel, Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY) != Z_OK)
+        throw(std::runtime_error("deflateInit failed while compressing."));
+
+    zs.next_in = (Bytef*)str.data();
+    zs.avail_in = str.size();
+
+    int ret;
+    char outbuffer[32768];
+    std::string outstring;
+
+    do {
+        zs.next_out = reinterpret_cast<Bytef*>(outbuffer);
+        zs.avail_out = sizeof(outbuffer);
+
+        ret = deflate(&zs, Z_FINISH);
+
+        if (outstring.size() < zs.total_out) {
+            outstring.append(outbuffer, zs.total_out - outstring.size());
+        }
+    } while (ret == Z_OK);
+
+    deflateEnd(&zs);
+
+    if (ret != Z_STREAM_END) {
+        throw(std::runtime_error("Exception during zlib compression: " + std::to_string(ret)));
+    }
+
+    return outstring;
+}
 
 HttpRequest parse_request(const std::string &request)
 {
@@ -74,11 +113,13 @@ void handle_client(int client_id)
     std::string encodingHeader = request.headers["accept-encoding"];
     std::cout << "encoding header: " << encodingHeader << std::endl;
     std::cout << (encodingHeader.find("gzip")) << std::endl;
-    std::string len_str = std::to_string(echo.length()); // Convert len to string
 
     if (encodingHeader.find("gzip") != -1) {
-      response = "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
+      std::string echo_compressed = compress_string(echo);
+      std::string len_str = std::to_string(echo_compressed.length()); // Convert len to string
+      response = "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo_compressed + "\r\n\r\n";
     } else {
+      std::string len_str = std::to_string(echo.length()); // Convert len to string
       response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
     }
 
