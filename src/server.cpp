@@ -127,6 +127,7 @@ void handle_client(int client_id)
     // response string to the client
     response = "HTTP/1.1 404 Not Found\r\n\r\n";
   }
+  
 
   // send the response to the client
   send(client_id, response.c_str(), response.size(), 0);
