@@ -33,21 +33,38 @@ struct HttpRequest
   std::string body;
 };
 
+std::string compress_string(const std::string& str, int compressionlevel = Z_BEST_COMPRESSION) {
+    z_stream zs;
+    memset(&zs, 0, sizeof(zs));
 
+    if (deflateInit2(&zs, compressionlevel, Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY) != Z_OK)
+        throw(std::runtime_error("deflateInit failed while compressing."));
 
-std::vector<uint8_t> compress(const std::span<const uint8_t> data) noexcept {
-  std::array<int, 2> pipe_fds;
-  const int pipe_read = pipe_fds[0];
-  const int pipe_write = pipe_fds[1];
-  gzFile file = gzdopen(pipe_write, "wb");
-  std::vector<uint8_t> result(1024);
-  const int compressed_size = read(pipe_read, result.data(), result.size());
-  if (compressed_size < 0) {
-    std::cout << "reading failed: " << compressed_size << '\n';
-    assert(false);
-  }
-  result.resize(compressed_size);
-  return result;
+    zs.next_in = (Bytef*)str.data();
+    zs.avail_in = str.size();
+
+    int ret;
+    char outbuffer[32768];
+    std::string outstring;
+
+    do {
+        zs.next_out = reinterpret_cast<Bytef*>(outbuffer);
+        zs.avail_out = sizeof(outbuffer);
+
+        ret = deflate(&zs, Z_FINISH);
+
+        if (outstring.size() < zs.total_out) {
+            outstring.append(outbuffer, zs.total_out - outstring.size());
+        }
+    } while (ret == Z_OK);
+
+    deflateEnd(&zs);
+
+    if (ret != Z_STREAM_END) {
+        throw(std::runtime_error("Exception during zlib compression: " + std::to_string(ret)));
+    }
+
+    return outstring;
 }
 
 HttpRequest parse_request(const std::string &request)
@@ -101,7 +118,7 @@ void handle_client(int client_id)
     std::cout << (encodingHeader.find("gzip")) << std::endl;
 
     if (encodingHeader.find("gzip") != -1) {
-      std::string echo_compressed = echo;
+      std::string echo_compressed = compress_string(echo);
       std::string len_str = std::to_string(echo_compressed.length()); // Convert len to string
       response = "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo_compressed + "\r\n\r\n";
     } else {

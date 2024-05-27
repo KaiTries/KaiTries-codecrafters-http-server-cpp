@@ -9,4 +9,6 @@ add_executable(server ${SOURCE_FILES})
 # adds support for pthreads
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+find_package(ZLIB REQUIRED)
 target_link_libraries(server PRIVATE Threads::Threads)
+target_link_libraries(server PRIVATE ZLIB::ZLIB)
