@@ -73,10 +73,10 @@ void handle_client(int client_id)
     // get the content-encoding header
     std::string encodingHeader = request.headers["accept-encoding"];
     std::cout << "encoding header: " << encodingHeader << std::endl;
-    std::cout << (encodingHeader == "gzip") << std::endl;
+    std::cout << (encodingHeader.find("gzip")) << std::endl;
     std::string len_str = std::to_string(echo.length()); // Convert len to string
 
-    if (encodingHeader == "gzip") {
+    if (encodingHeader.find("gzip") == 0) {
       response = "HTTP/1.1 200 OK\r\nContent-Encoding: "+ encodingHeader + "\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
     } else {
       response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
