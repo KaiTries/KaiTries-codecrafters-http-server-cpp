@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cctype>
 #include <zlib.h>
+#include <stdexcept>
 
 std::string directory;
 
