@@ -27,16 +27,10 @@ struct HttpRequest
   std::string body;
 };
 
-#include <zlib.h>
-#include <string>
-#include <stdexcept>
 
 std::string compress_string(const std::string& str, int compressionlevel = Z_BEST_COMPRESSION) {
     z_stream zs;
     memset(&zs, 0, sizeof(zs));
-
-    if (deflateInit2(&zs, compressionlevel, Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY) != Z_OK)
-        throw(std::runtime_error("deflateInit failed while compressing."));
 
     zs.next_in = (Bytef*)str.data();
     zs.avail_in = str.size();
