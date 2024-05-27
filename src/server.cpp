@@ -10,6 +10,8 @@
 #include <map>     // Add this line
 #include <sstream> // Add this line
 #include <thread>
+#include <algorithm>
+#include <cctype>
 
 std::string directory;
 
@@ -39,6 +41,8 @@ HttpRequest parse_request(const std::string &request)
     std::istringstream header_line_stream(line);
     std::string header_name;
     std::getline(header_line_stream, header_name, ':');
+    std::transform(header_name.begin(), header_name.end(), header_name.begin(),
+                    [](unsigned char c){return std::tolower(c);});
     std::string header_value;
     std::getline(header_line_stream, header_value);
     req.headers[header_name] = header_value.substr(1); // Skip the leading space
@@ -65,6 +69,10 @@ void handle_client(int client_id)
   {
     // response string to the client
     std::string echo = path.substr(path.find(" ") + 7, path.rfind(" ") - path.find(" ") - 1);
+
+    // get the content-encoding header
+    std::string encodingHeader = request.headers["accept_encoding"];
+    std::cout << encodingHeader << std::endl;
     std::string len_str = std::to_string(echo.length()); // Convert len to string
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
   }
@@ -127,7 +135,7 @@ void handle_client(int client_id)
     // response string to the client
     response = "HTTP/1.1 404 Not Found\r\n\r\n";
   }
-  
+
 
   // send the response to the client
   send(client_id, response.c_str(), response.size(), 0);
