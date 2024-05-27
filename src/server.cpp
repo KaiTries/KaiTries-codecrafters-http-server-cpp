@@ -77,7 +77,7 @@ void handle_client(int client_id)
     std::string len_str = std::to_string(echo.length()); // Convert len to string
 
     if (encodingHeader.find("gzip") != -1) {
-      response = "HTTP/1.1 200 OK\r\nContent-Encoding: "+ encodingHeader + "\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
+      response = "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
     } else {
       response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
     }
