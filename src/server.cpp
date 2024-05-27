@@ -71,8 +71,8 @@ void handle_client(int client_id)
     std::string echo = path.substr(path.find(" ") + 7, path.rfind(" ") - path.find(" ") - 1);
 
     // get the content-encoding header
-    std::string encodingHeader = request.headers["accept_encoding"];
-    std::cout << encodingHeader << std::endl;
+    std::string encodingHeader = request.headers["accept-encoding"];
+    std::cout << "encoding header: " << encodingHeader << std::endl;
     std::string len_str = std::to_string(echo.length()); // Convert len to string
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + len_str + "\r\n\r\n" + echo + "\r\n\r\n";
   }
